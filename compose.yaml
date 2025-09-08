@@ -1,0 +1,49 @@
+version: "1.0.1"
+
+networks:
+  mongo-network:
+    name: mongo-network
+    driver: bridge
+
+services:
+
+  node-app:
+    container_name: node-app
+    build: 
+      context: .
+      args:
+        PRIVATE_REGISTRY: ${PRIVATE_REGISTRY}
+    image: node-app:1.0.3
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_DB_USERNAME=${MONGO_DB_USER}
+      - MONGO_DB_PWD=${MONGO_DB_PWD}
+    restart: always
+    networks:
+      - mongo-network
+
+  mongodb:
+    container_name: mongodb
+    image: mongo
+    ports:
+      - "2017:2017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PWD}
+    networks:
+      - mongo-network
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    ports: 
+      - "8082:8081"
+    environment: 
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_DB_USER}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_DB_PWD}
+    depends_on:
+      - mongodb
+    networks:
+      - mongo-network
